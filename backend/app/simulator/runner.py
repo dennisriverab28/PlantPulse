@@ -1,4 +1,4 @@
-"""Background loop that streams simulated telemetry into the database."""
+"""Background loop that streams simulated device telemetry into the database."""
 
 import asyncio
 import logging
@@ -7,33 +7,33 @@ from sqlalchemy import select
 
 from ..config import settings
 from ..db import SessionLocal
-from ..models import Alert, Machine, SensorReading
-from .engine import MachineSimulator, is_anomalous
+from ..models import Alert, Device, SensorReading
+from .engine import DeviceSimulator, is_anomalous
 
 logger = logging.getLogger(__name__)
 
 # Live registry so API endpoints (e.g. anomaly injection) can reach simulators.
-simulators: dict[int, MachineSimulator] = {}
+simulators: dict[int, DeviceSimulator] = {}
 
-SEED_MACHINES = [
-    ("CNC-01", "Line A", "CNC mill"),
-    ("PRESS-02", "Line A", "Hydraulic press"),
-    ("WELD-03", "Line B", "Welding robot"),
-    ("CONV-04", "Line B", "Conveyor"),
+SEED_DEVICES = [
+    ("EDGE-01", "Bench A", "ESP32 edge gateway", "v2.4.1"),
+    ("HIL-02", "Bench A", "STM32 HIL test rig", "v1.9.0"),
+    ("SENSE-03", "Bench B", "nRF52 sensor node", "v3.1.2"),
+    ("VISION-04", "Bench B", "i.MX8 vision module", "v0.8.7"),
 ]
 
 
-def seed_machines() -> list[Machine]:
+def seed_devices() -> list[Device]:
     with SessionLocal() as db:
-        machines = db.scalars(select(Machine)).all()
-        if not machines:
+        devices = db.scalars(select(Device)).all()
+        if not devices:
             db.add_all(
-                Machine(name=name, line=line, machine_type=mtype)
-                for name, line, mtype in SEED_MACHINES
+                Device(name=name, bench=bench, device_type=dtype, firmware_version=fw)
+                for name, bench, dtype, fw in SEED_DEVICES
             )
             db.commit()
-            machines = db.scalars(select(Machine)).all()
-        return list(machines)
+            devices = db.scalars(select(Device)).all()
+        return list(devices)
 
 
 def record_tick() -> None:
@@ -44,7 +44,7 @@ def record_tick() -> None:
                 if is_anomalous(r["metric"], r["value"], r["recorded_at"], sim.phase):
                     open_alert = db.scalar(
                         select(Alert).where(
-                            Alert.machine_id == r["machine_id"],
+                            Alert.device_id == r["device_id"],
                             Alert.metric == r["metric"],
                             Alert.acknowledged.is_(False),
                         )
@@ -52,7 +52,7 @@ def record_tick() -> None:
                     if open_alert is None:
                         db.add(
                             Alert(
-                                machine_id=r["machine_id"],
+                                device_id=r["device_id"],
                                 metric=r["metric"],
                                 severity="critical",
                                 message=(
@@ -65,10 +65,10 @@ def record_tick() -> None:
 
 
 async def simulator_loop() -> None:
-    machines = await asyncio.to_thread(seed_machines)
-    for m in machines:
-        simulators[m.id] = MachineSimulator(m.id, seed=m.id)
-    logger.info("simulator started for %d machines", len(simulators))
+    devices = await asyncio.to_thread(seed_devices)
+    for d in devices:
+        simulators[d.id] = DeviceSimulator(d.id, seed=d.id)
+    logger.info("simulator started for %d devices", len(simulators))
     try:
         while True:
             await asyncio.to_thread(record_tick)

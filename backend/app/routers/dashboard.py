@@ -5,7 +5,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from ..db import get_db
-from ..models import Alert, Machine, MachineStatus, SensorReading, utcnow
+from ..models import Alert, Device, DeviceStatus, SensorReading, utcnow
 from ..schemas import AlertOut, DashboardSummary
 
 router = APIRouter(prefix="/api/dashboard", tags=["dashboard"])
@@ -15,9 +15,9 @@ router = APIRouter(prefix="/api/dashboard", tags=["dashboard"])
 def summary(db: Session = Depends(get_db)):
     hour_ago = utcnow() - timedelta(hours=1)
     return DashboardSummary(
-        machines_total=db.scalar(select(func.count(Machine.id))) or 0,
-        machines_running=db.scalar(
-            select(func.count(Machine.id)).where(Machine.status == MachineStatus.running)
+        devices_total=db.scalar(select(func.count(Device.id))) or 0,
+        devices_online=db.scalar(
+            select(func.count(Device.id)).where(Device.status == DeviceStatus.online)
         )
         or 0,
         alerts_open=db.scalar(

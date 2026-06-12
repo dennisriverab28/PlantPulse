@@ -5,7 +5,7 @@ export default function SimulatorPage() {
     <ComingSoon
       title="Simulator controls"
       slice={1}
-      blurb="Tune the telemetry engine, inject anomalies per machine, add manual readings, and import CSV test data."
+      blurb="Tune the telemetry engine, inject anomalies per device, add manual readings, and import CSV test logs."
     />
   )
 }

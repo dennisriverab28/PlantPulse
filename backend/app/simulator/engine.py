@@ -1,8 +1,9 @@
-"""Telemetry generation for simulated plant-floor machines.
+"""Telemetry generation for simulated embedded devices on test benches.
 
 Each metric follows a slow sinusoidal duty cycle plus gaussian noise, so charts
-look like real industrial telemetry instead of random static. Anomalies can be
-injected per-machine to drive a metric out of its normal band for N ticks.
+look like real device telemetry instead of random static. Anomalies can be
+injected per-device to drive a metric out of its normal band for N ticks —
+e.g. a thermal runaway, a sagging supply rail, or a heap leak.
 """
 
 import math
@@ -10,10 +11,10 @@ import random
 from datetime import datetime, timezone
 
 METRIC_PROFILES: dict[str, dict] = {
-    "temperature": {"base": 68.0, "amplitude": 6.0, "noise": 1.5, "unit": "°C", "period_s": 3600},
-    "vibration": {"base": 2.4, "amplitude": 0.6, "noise": 0.25, "unit": "mm/s", "period_s": 900},
-    "rpm": {"base": 1750.0, "amplitude": 40.0, "noise": 20.0, "unit": "rpm", "period_s": 1800},
-    "throughput": {"base": 120.0, "amplitude": 15.0, "noise": 6.0, "unit": "units/hr", "period_s": 7200},
+    "cpu_temp": {"base": 52.0, "amplitude": 6.0, "noise": 1.2, "unit": "°C", "period_s": 3600},
+    "supply_voltage": {"base": 3.30, "amplitude": 0.04, "noise": 0.015, "unit": "V", "period_s": 1800},
+    "current_draw": {"base": 180.0, "amplitude": 45.0, "noise": 10.0, "unit": "mA", "period_s": 900},
+    "free_heap": {"base": 148.0, "amplitude": 16.0, "noise": 5.0, "unit": "KB", "period_s": 7200},
 }
 
 # Beyond this many noise-deviations from the expected curve, a reading is anomalous.
@@ -31,16 +32,16 @@ def is_anomalous(metric: str, value: float, at: datetime, phase: float = 0.0) ->
     return abs(value - expected_value(metric, at, phase)) > ALERT_SIGMA * p["noise"]
 
 
-class MachineSimulator:
-    def __init__(self, machine_id: int, seed: int | None = None):
-        self.machine_id = machine_id
+class DeviceSimulator:
+    def __init__(self, device_id: int, seed: int | None = None):
+        self.device_id = device_id
         self.rng = random.Random(seed)
-        # A per-machine phase offset so machines don't move in lockstep.
+        # A per-device phase offset so devices don't move in lockstep.
         self.phase = self.rng.uniform(0, 2 * math.pi)
         self.anomaly_metric: str | None = None
         self.anomaly_ticks = 0
 
-    def inject_anomaly(self, metric: str = "temperature", ticks: int = 12) -> None:
+    def inject_anomaly(self, metric: str = "cpu_temp", ticks: int = 12) -> None:
         if metric not in METRIC_PROFILES:
             raise ValueError(f"unknown metric: {metric}")
         self.anomaly_metric = metric
@@ -56,9 +57,9 @@ class MachineSimulator:
                 value += (ALERT_SIGMA + 2) * p["noise"] + 0.5 * p["amplitude"]
             readings.append(
                 {
-                    "machine_id": self.machine_id,
+                    "device_id": self.device_id,
                     "metric": metric,
-                    "value": round(value, 2),
+                    "value": round(value, 3),
                     "unit": p["unit"],
                     "recorded_at": at,
                 }

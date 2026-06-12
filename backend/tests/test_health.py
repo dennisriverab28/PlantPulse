@@ -15,8 +15,8 @@ def test_health():
         assert r.json() == {"status": "ok"}
 
 
-def test_machines_empty():
+def test_devices_empty():
     with TestClient(app) as client:
-        r = client.get("/api/machines")
+        r = client.get("/api/devices")
         assert r.status_code == 200
         assert r.json() == []

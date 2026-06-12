@@ -11,10 +11,10 @@ def utcnow() -> datetime:
     return datetime.now(timezone.utc)
 
 
-class MachineStatus(str, enum.Enum):
-    running = "running"
+class DeviceStatus(str, enum.Enum):
+    online = "online"
     idle = "idle"
-    maintenance = "maintenance"
+    updating = "updating"
     fault = "fault"
 
 
@@ -24,25 +24,26 @@ class ReadingSource(str, enum.Enum):
     csv_import = "csv_import"
 
 
-class Machine(Base):
-    __tablename__ = "machines"
+class Device(Base):
+    __tablename__ = "devices"
 
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(100), unique=True)
-    line: Mapped[str] = mapped_column(String(50))
-    machine_type: Mapped[str] = mapped_column(String(50))
-    status: Mapped[MachineStatus] = mapped_column(
-        Enum(MachineStatus), default=MachineStatus.running
+    bench: Mapped[str] = mapped_column(String(50))
+    device_type: Mapped[str] = mapped_column(String(50))
+    firmware_version: Mapped[str] = mapped_column(String(20), default="v0.0.0")
+    status: Mapped[DeviceStatus] = mapped_column(
+        Enum(DeviceStatus), default=DeviceStatus.online
     )
 
-    readings: Mapped[list["SensorReading"]] = relationship(back_populates="machine")
+    readings: Mapped[list["SensorReading"]] = relationship(back_populates="device")
 
 
 class SensorReading(Base):
     __tablename__ = "sensor_readings"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    machine_id: Mapped[int] = mapped_column(ForeignKey("machines.id"), index=True)
+    device_id: Mapped[int] = mapped_column(ForeignKey("devices.id"), index=True)
     metric: Mapped[str] = mapped_column(String(50), index=True)
     value: Mapped[float]
     unit: Mapped[str] = mapped_column(String(20))
@@ -53,7 +54,7 @@ class SensorReading(Base):
         DateTime(timezone=True), default=utcnow, index=True
     )
 
-    machine: Mapped["Machine"] = relationship(back_populates="readings")
+    device: Mapped["Device"] = relationship(back_populates="readings")
 
 
 class InventoryItem(Base):
@@ -73,7 +74,7 @@ class Alert(Base):
     __tablename__ = "alerts"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    machine_id: Mapped[int | None] = mapped_column(ForeignKey("machines.id"), nullable=True)
+    device_id: Mapped[int | None] = mapped_column(ForeignKey("devices.id"), nullable=True)
     metric: Mapped[str] = mapped_column(String(50), default="")
     severity: Mapped[str] = mapped_column(String(20))
     message: Mapped[str] = mapped_column(String(255))

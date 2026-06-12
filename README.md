@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/banner.svg" alt="PlantPulse — Engineering Operations Hub" width="100%">
+  <img src="docs/banner.svg" alt="PlantPulse — Embedded Fleet Operations Hub" width="100%">
 </p>
 
 <p align="center">
@@ -14,8 +14,8 @@
 </p>
 
 <p align="center">
-  A manufacturing plant's single pane of glass — live machine telemetry, spare-parts
-  inventory, verified reporting, and an AI copilot.<br>
+  An embedded device fleet's single pane of glass — live telemetry from test benches,
+  firmware tracking, lab inventory, verified reporting, and an AI copilot.<br>
   Built end to end with industry-standard practices: containerized services, CI,
   typed code, and a tested simulation engine.
 </p>
@@ -23,21 +23,26 @@
 ---
 
 <p align="center">
-  <img src="docs/dashboard.png" alt="PlantPulse dashboard — live telemetry chart, stat cards, and an out-of-band temperature alert" width="100%">
+  <img src="docs/dashboard.png" alt="PlantPulse dashboard — live device telemetry chart, fleet stat cards, and an out-of-band alert" width="100%">
 </p>
 
 ## ✨ What it does
 
-- 📡 **Live dashboard** — machines stream simulated sensor telemetry (temperature,
-  vibration, RPM, throughput) into PostgreSQL; the dashboard charts it in near
-  real time with animated stat cards and surfaces out-of-band alerts.
-- ⚙️ **Telemetry simulator** — realistic sinusoidal duty cycles + gaussian noise per
-  machine (not random static), with **one-click anomaly injection** so you can watch
-  the alert detector fire live. That red alert in the screenshot? Injected on purpose.
-- 📦 **Inventory tracker** *(slice 2)* — spare parts, locations, low-stock alerts.
+- 📡 **Live fleet dashboard** — embedded devices (edge gateways, HIL rigs, sensor
+  nodes, vision modules) stream telemetry — SoC temperature, supply voltage,
+  current draw, free heap — into PostgreSQL; the dashboard charts it in near real
+  time with animated stat cards and surfaces out-of-band alerts.
+- ⚙️ **Device fleet simulator** — realistic sinusoidal duty cycles + gaussian noise
+  per device (not random static), with **one-click anomaly injection**: thermal
+  runaway, sagging supply rail, heap leak — and watch the alert detector fire live.
+- 🔌 **Firmware tracking** — every device carries its firmware version; OTA update
+  tracking and validation campaigns build on this.
+- 📦 **Lab inventory** *(slice 2)* — dev boards, sensors, debug probes, components;
+  locations and low-stock alerts.
 - 📊 **Reports** *(slice 3)* — one-click Excel workbooks and PowerPoint status decks,
-  plus a verifier that cross-checks submitted reports against recorded data.
-- 🤖 **AI copilot** *(slice 4)* — ask questions about plant data in plain English;
+  plus a **firmware-validation verifier** that cross-checks submitted test reports
+  against recorded telemetry.
+- 🤖 **AI copilot** *(slice 4)* — ask questions about fleet data in plain English;
   the copilot writes safe, read-only SQL and shows its work.
 
 ## 🏗 Architecture
@@ -46,7 +51,7 @@
 flowchart LR
     subgraph compose [Docker Compose]
         FE[React + Vite + Tailwind] -->|REST /api| BE[FastAPI]
-        SIM[Simulator worker] --> DB[(PostgreSQL)]
+        SIM[Device fleet simulator] --> DB[(PostgreSQL)]
         BE --> DB
         BE -.->|slice 4| AI[Claude API]
         BE -.->|slice 3| XP[Excel / PPTX export]
@@ -93,12 +98,12 @@ injected anomalies trip the detector, anomalies clear after their window).
 
 ## 🗺 Roadmap
 
-- [x] **Slice 0** — scaffold: FastAPI + simulator + React dashboard + Docker + CI
-- [ ] **Slice 1** — Alembic migrations, simulator controls UI, manual + CSV data entry, WebSocket live updates
-- [ ] **Slice 2** — auth (JWT, roles: admin / engineer / viewer), inventory tracker
-- [ ] **Slice 3** — Excel/PPTX report generator + report verifier
+- [x] **Slice 0** — scaffold: FastAPI + device fleet simulator + React dashboard + Docker + CI
+- [ ] **Slice 1** — Alembic migrations, simulator controls UI, manual + CSV test-log entry, WebSocket live updates
+- [ ] **Slice 2** — auth (JWT, roles: admin / engineer / viewer), lab inventory tracker
+- [ ] **Slice 3** — Excel/PPTX report generator + firmware-validation report verifier
 - [ ] **Slice 4** — AI copilot (natural language → read-only SQL)
-- [ ] **Slice 5** — polish, plant-floor map view, seed history, cloud deploy + auto-deploy from CI
+- [ ] **Slice 5** — polish, bench map fleet view, seed history, cloud deploy + auto-deploy from CI
 
 ## 🧰 Stack
 

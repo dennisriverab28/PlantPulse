@@ -41,7 +41,7 @@
   <text class="sans" x="1132" y="47" text-anchor="end" font-size="14" fill="#71717a">live</text>
 
   <text class="sans" x="600" y="138" text-anchor="middle" font-size="68" font-weight="700" fill="#fafafa" letter-spacing="-1">Plant<tspan fill="#34d399">Pulse</tspan></text>
-  <text class="sans" x="600" y="180" text-anchor="middle" font-size="21" fill="#a1a1aa">Engineering Operations Hub — live telemetry · inventory · verified reports · AI copilot</text>
+  <text class="sans" x="600" y="180" text-anchor="middle" font-size="21" fill="#a1a1aa">Embedded Fleet Operations Hub — device telemetry · firmware validation · lab inventory · AI copilot</text>
 
   <path class="trace-glow" d="M -10 245 H 150 l 12 -16 12 16 H 280 l 11 -52 14 82 10 -30 H 478 l 12 -16 12 16 H 622 l 11 -64 14 98 10 -34 H 838 l 12 -16 12 16 H 980 l 11 -48 14 76 10 -28 H 1210"/>
   <path class="trace" d="M -10 245 H 150 l 12 -16 12 16 H 280 l 11 -52 14 82 10 -30 H 478 l 12 -16 12 16 H 622 l 11 -64 14 98 10 -34 H 838 l 12 -16 12 16 H 980 l 11 -48 14 76 10 -28 H 1210"/>

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { Activity, AlertTriangle, Database, Factory, FlaskConical, Zap } from 'lucide-react'
+import { Activity, AlertTriangle, Cpu, Database, FlaskConical, Wifi } from 'lucide-react'
 import {
   CartesianGrid,
   Line,
@@ -11,11 +11,12 @@ import {
   YAxis,
 } from 'recharts'
 
-interface Machine {
+interface Device {
   id: number
   name: string
-  line: string
-  machine_type: string
+  bench: string
+  device_type: string
+  firmware_version: string
   status: string
 }
 
@@ -28,37 +29,42 @@ interface Reading {
 }
 
 interface Summary {
-  machines_total: number
-  machines_running: number
+  devices_total: number
+  devices_online: number
   alerts_open: number
   readings_last_hour: number
 }
 
-interface PlantAlert {
+interface FleetAlert {
   id: number
-  machine_id: number | null
+  device_id: number | null
   metric: string
   severity: string
   message: string
   created_at: string
 }
 
-const METRICS = ['temperature', 'vibration', 'rpm', 'throughput']
+const METRICS = [
+  { key: 'cpu_temp', label: 'CPU temp' },
+  { key: 'supply_voltage', label: 'voltage' },
+  { key: 'current_draw', label: 'current' },
+  { key: 'free_heap', label: 'free heap' },
+]
 
 export default function Dashboard() {
-  const [machines, setMachines] = useState<Machine[]>([])
+  const [devices, setDevices] = useState<Device[]>([])
   const [selected, setSelected] = useState<number | null>(null)
-  const [metric, setMetric] = useState('temperature')
+  const [metric, setMetric] = useState('cpu_temp')
   const [readings, setReadings] = useState<Reading[]>([])
   const [summary, setSummary] = useState<Summary | null>(null)
-  const [alerts, setAlerts] = useState<PlantAlert[]>([])
+  const [alerts, setAlerts] = useState<FleetAlert[]>([])
 
   useEffect(() => {
-    fetch('/api/machines')
+    fetch('/api/devices')
       .then((r) => r.json())
-      .then((ms: Machine[]) => {
-        setMachines(ms)
-        if (ms.length > 0) setSelected((prev) => prev ?? ms[0].id)
+      .then((ds: Device[]) => {
+        setDevices(ds)
+        if (ds.length > 0) setSelected((prev) => prev ?? ds[0].id)
       })
       .catch(() => {})
   }, [])
@@ -76,7 +82,7 @@ export default function Dashboard() {
   useEffect(() => {
     if (selected == null) return
     const load = () => {
-      fetch(`/api/machines/${selected}/readings?metric=${metric}&limit=60`)
+      fetch(`/api/devices/${selected}/readings?metric=${metric}&limit=60`)
         .then((r) => r.json())
         .then(setReadings)
         .catch(() => {})
@@ -88,7 +94,7 @@ export default function Dashboard() {
 
   const injectAnomaly = useCallback(() => {
     if (selected == null) return
-    fetch(`/api/machines/${selected}/anomaly`, {
+    fetch(`/api/devices/${selected}/anomaly`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ metric, ticks: 12 }),
@@ -105,9 +111,12 @@ export default function Dashboard() {
     value: r.value,
   }))
 
+  const selectedDevice = devices.find((d) => d.id === selected)
+  const metricLabel = METRICS.find((m) => m.key === metric)?.label ?? metric
+
   const stats = [
-    { label: 'Machines', value: summary?.machines_total, icon: Factory, tint: 'text-sky-400' },
-    { label: 'Running', value: summary?.machines_running, icon: Zap, tint: 'text-emerald-400' },
+    { label: 'Devices', value: summary?.devices_total, icon: Cpu, tint: 'text-sky-400' },
+    { label: 'Online', value: summary?.devices_online, icon: Wifi, tint: 'text-emerald-400' },
     { label: 'Open alerts', value: summary?.alerts_open, icon: AlertTriangle, tint: 'text-amber-400' },
     { label: 'Readings / hr', value: summary?.readings_last_hour, icon: Database, tint: 'text-violet-400' },
   ]
@@ -146,24 +155,27 @@ export default function Dashboard() {
             onChange={(e) => setSelected(Number(e.target.value))}
             className="rounded-md border border-zinc-700 bg-zinc-900 px-2 py-1 text-xs"
           >
-            {machines.map((m) => (
-              <option key={m.id} value={m.id}>
-                {m.name} · {m.line}
+            {devices.map((d) => (
+              <option key={d.id} value={d.id}>
+                {d.name} · {d.bench} · fw {d.firmware_version}
               </option>
             ))}
           </select>
+          {selectedDevice && (
+            <span className="text-xs text-zinc-500">{selectedDevice.device_type}</span>
+          )}
           <div className="flex gap-1">
             {METRICS.map((m) => (
               <button
-                key={m}
-                onClick={() => setMetric(m)}
+                key={m.key}
+                onClick={() => setMetric(m.key)}
                 className={`rounded-md px-2 py-1 text-xs transition-colors ${
-                  metric === m
+                  metric === m.key
                     ? 'bg-emerald-500/15 text-emerald-300'
                     : 'text-zinc-500 hover:bg-zinc-900 hover:text-zinc-200'
                 }`}
               >
-                {m}
+                {m.label}
               </button>
             ))}
           </div>
@@ -201,7 +213,7 @@ export default function Dashboard() {
                     borderRadius: 8,
                     fontSize: 12,
                   }}
-                  formatter={(value) => [`${value} ${unit}`, metric]}
+                  formatter={(value) => [`${value} ${unit}`, metricLabel]}
                 />
                 <Line
                   type="monotone"
@@ -234,7 +246,10 @@ export default function Dashboard() {
                 className="flex items-center gap-3 rounded-lg border border-red-500/20 bg-red-500/5 px-3 py-2 text-sm"
               >
                 <AlertTriangle className="h-4 w-4 shrink-0 text-red-400" />
-                <span className="text-zinc-200">{a.message}</span>
+                <span className="text-zinc-200">
+                  {devices.find((d) => d.id === a.device_id)?.name ?? `device ${a.device_id}`}:{' '}
+                  {a.message}
+                </span>
                 <span className="ml-auto text-xs text-zinc-500">
                   {new Date(a.created_at).toLocaleTimeString()}
                 </span>

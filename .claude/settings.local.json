@@ -49,7 +49,12 @@
       "Bash(git config *)",
       "Bash(git add *)",
       "Bash(git commit -m 'Scaffold PlantPulse: telemetry simulator, live dashboard, Docker, CI *)",
-      "Bash(git rebase *)"
+      "Bash(git rebase *)",
+      "Bash(git push *)",
+      "Bash(curl -sf --retry 20 --retry-connrefused --retry-delay 2 http://localhost:8000/api/devices)",
+      "Bash(curl -s http://localhost:8000/api/dashboard/summary)",
+      "Bash(curl -sf -m 3 -o /dev/null http://localhost:5173)",
+      "Bash(git commit --quiet -m 'Retarget domain to embedded device fleet *)"
     ]
   }
 }

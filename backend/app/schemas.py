@@ -2,24 +2,25 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict
 
-from .models import MachineStatus, ReadingSource
+from .models import DeviceStatus, ReadingSource
 
 
-class MachineOut(BaseModel):
+class DeviceOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
     name: str
-    line: str
-    machine_type: str
-    status: MachineStatus
+    bench: str
+    device_type: str
+    firmware_version: str
+    status: DeviceStatus
 
 
 class ReadingOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
-    machine_id: int
+    device_id: int
     metric: str
     value: float
     unit: str
@@ -31,7 +32,7 @@ class AlertOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
-    machine_id: int | None
+    device_id: int | None
     metric: str
     severity: str
     message: str
@@ -40,12 +41,12 @@ class AlertOut(BaseModel):
 
 
 class AnomalyRequest(BaseModel):
-    metric: str = "temperature"
+    metric: str = "cpu_temp"
     ticks: int = 12
 
 
 class DashboardSummary(BaseModel):
-    machines_total: int
-    machines_running: int
+    devices_total: int
+    devices_online: int
     alerts_open: int
     readings_last_hour: int

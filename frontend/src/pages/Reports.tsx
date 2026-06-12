@@ -5,7 +5,7 @@ export default function Reports() {
     <ComingSoon
       title="Reports"
       slice={3}
-      blurb="One-click Excel workbooks and PowerPoint status decks, plus a verifier that cross-checks submitted reports against recorded data."
+      blurb="One-click Excel workbooks and PowerPoint status decks, plus a firmware-validation verifier that cross-checks submitted test reports against recorded telemetry."
     />
   )
 }

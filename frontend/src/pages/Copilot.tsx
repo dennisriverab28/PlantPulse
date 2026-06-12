@@ -5,7 +5,7 @@ export default function Copilot() {
     <ComingSoon
       title="AI Copilot"
       slice={4}
-      blurb="Ask questions about your plant data in plain English — the copilot writes safe, read-only SQL and explains what it found."
+      blurb="Ask questions about your fleet data in plain English — the copilot writes safe, read-only SQL and explains what it found."
     />
   )
 }

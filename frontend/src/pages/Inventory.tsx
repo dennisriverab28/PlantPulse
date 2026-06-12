@@ -5,7 +5,7 @@ export default function Inventory() {
     <ComingSoon
       title="Inventory tracker"
       slice={2}
-      blurb="Spare-parts inventory with low-stock alerts, locations, and usage history tied to machine maintenance."
+      blurb="Lab inventory — dev boards, sensors, debug probes, components — with locations, low-stock alerts, and usage history per bench."
     />
   )
 }
