@@ -14,6 +14,11 @@
 </p>
 
 <p align="center">
+  <b>▶ <a href="https://dennisriverab28.github.io/PlantPulse/">Try the live demo</a></b> — runs the telemetry simulation in your browser, no backend needed.<br>
+  The full stack (FastAPI + PostgreSQL + alert pipeline) boots with one <code>docker compose up</code>.
+</p>
+
+<p align="center">
   An embedded device fleet's single pane of glass — live telemetry from test benches,
   firmware tracking, lab inventory, verified reporting, and an AI copilot.<br>
   Built end to end with industry-standard practices: containerized services, CI,

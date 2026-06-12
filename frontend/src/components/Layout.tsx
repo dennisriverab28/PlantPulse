@@ -1,5 +1,6 @@
 import { NavLink, Outlet } from 'react-router-dom'
 import { Bot, Boxes, FileText, Gauge, LayoutDashboard, Radio } from 'lucide-react'
+import { IS_DEMO } from '../lib/api'
 
 const NAV = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard },
@@ -42,6 +43,14 @@ export default function Layout() {
       <div className="flex flex-1 flex-col">
         <header className="flex items-center justify-between border-b border-zinc-800 px-6 py-4">
           <h1 className="text-sm font-medium text-zinc-300">Embedded Fleet Operations Hub</h1>
+          {IS_DEMO && (
+            <a
+              href="https://github.com/dennisriverab28/PlantPulse"
+              className="rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-xs text-amber-300 transition-colors hover:bg-amber-500/20"
+            >
+              in-browser demo — full stack runs via docker compose →
+            </a>
+          )}
           <div className="flex items-center gap-2 text-xs text-zinc-400">
             <span className="relative flex h-2 w-2">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />

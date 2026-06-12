@@ -10,39 +10,8 @@ import {
   XAxis,
   YAxis,
 } from 'recharts'
-
-interface Device {
-  id: number
-  name: string
-  bench: string
-  device_type: string
-  firmware_version: string
-  status: string
-}
-
-interface Reading {
-  id: number
-  metric: string
-  value: number
-  unit: string
-  recorded_at: string
-}
-
-interface Summary {
-  devices_total: number
-  devices_online: number
-  alerts_open: number
-  readings_last_hour: number
-}
-
-interface FleetAlert {
-  id: number
-  device_id: number | null
-  metric: string
-  severity: string
-  message: string
-  created_at: string
-}
+import * as api from '../lib/api'
+import type { Device, FleetAlert, Reading, Summary } from '../lib/types'
 
 const METRICS = [
   { key: 'cpu_temp', label: 'CPU temp' },
@@ -60,9 +29,9 @@ export default function Dashboard() {
   const [alerts, setAlerts] = useState<FleetAlert[]>([])
 
   useEffect(() => {
-    fetch('/api/devices')
-      .then((r) => r.json())
-      .then((ds: Device[]) => {
+    api
+      .getDevices()
+      .then((ds) => {
         setDevices(ds)
         if (ds.length > 0) setSelected((prev) => prev ?? ds[0].id)
       })
@@ -71,8 +40,8 @@ export default function Dashboard() {
 
   useEffect(() => {
     const load = () => {
-      fetch('/api/dashboard/summary').then((r) => r.json()).then(setSummary).catch(() => {})
-      fetch('/api/dashboard/alerts').then((r) => r.json()).then(setAlerts).catch(() => {})
+      api.getSummary().then(setSummary).catch(() => {})
+      api.getAlerts().then(setAlerts).catch(() => {})
     }
     load()
     const id = setInterval(load, 10_000)
@@ -82,10 +51,7 @@ export default function Dashboard() {
   useEffect(() => {
     if (selected == null) return
     const load = () => {
-      fetch(`/api/devices/${selected}/readings?metric=${metric}&limit=60`)
-        .then((r) => r.json())
-        .then(setReadings)
-        .catch(() => {})
+      api.getReadings(selected, metric, 60).then(setReadings).catch(() => {})
     }
     load()
     const id = setInterval(load, 5_000)
@@ -94,11 +60,7 @@ export default function Dashboard() {
 
   const injectAnomaly = useCallback(() => {
     if (selected == null) return
-    fetch(`/api/devices/${selected}/anomaly`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ metric, ticks: 12 }),
-    }).catch(() => {})
+    api.injectAnomaly(selected, metric, 12).catch(() => {})
   }, [selected, metric])
 
   const unit = readings.length > 0 ? readings[readings.length - 1].unit : ''
